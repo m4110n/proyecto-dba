@@ -3,29 +3,17 @@ use bd_inventariofree;
 
 -- estructura de tablas
 
--- Producto
+-- Producto -------------------------------------------
 CREATE TABLE `db.producto`
 (
- `pro_codigo`      varchar(50) NOT NULL ,
- `pro_descripcion` varchar(45) NOT NULL ,
+ `pro_codigo`      INT NOT NULL AUTO_INCREMENT,
+ `pro_descripcion` varchar(45) NOT NULL,
 
 PRIMARY KEY (`pro_codigo`)
 );
 
--- Inventario
-CREATE TABLE `db.inventario`
-(
- `inv_pro_codigo` varchar(50) NOT NULL ,
- `inv_entradas`   int NOT NULL ,
- `inv_salidas`    int NOT NULL ,
- `inv_stock`      int NOT NULL ,
 
-PRIMARY KEY (`inv_pro_codigo`),
-KEY `FK_1` (`inv_pro_codigo`),
-CONSTRAINT `FK_2` FOREIGN KEY `FK_1` (`inv_pro_codigo`) REFERENCES `db.producto` (`pro_codigo`)
-);
-
--- Entrada
+-- Entrada -------------------------------------------
 CREATE TABLE `db.entrada`
 (
  `ent_id`         int NOT NULL ,
@@ -39,7 +27,7 @@ KEY `FK_1` (`ent_pro_codigo`),
 CONSTRAINT `FK_3` FOREIGN KEY `FK_1` (`ent_pro_codigo`) REFERENCES `db.producto` (`pro_codigo`)
 );
 
--- salida
+-- salida -------------------------------------------
 CREATE TABLE `db.salida`
 (
  `sal_id`         int NOT NULL ,
@@ -51,5 +39,18 @@ CREATE TABLE `db.salida`
 PRIMARY KEY (`sal_id`, `sal_pro_codigo`),
 KEY `FK_1` (`sal_pro_codigo`),
 CONSTRAINT `FK_1` FOREIGN KEY `FK_1` (`sal_pro_codigo`) REFERENCES `db.producto` (`pro_codigo`)
+);
+
+-- Inventario -------------------------------------------
+CREATE TABLE `db.inventario`
+(
+ `inv_pro_codigo` varchar(50) NOT NULL ,
+ `inv_entradas`   int NOT NULL ,
+ `inv_salidas`    int NOT NULL ,
+ `inv_stock`      int NOT NULL ,
+
+PRIMARY KEY (`inv_pro_codigo`),
+KEY `FK_1` (`inv_pro_codigo`),
+CONSTRAINT `FK_2` FOREIGN KEY `FK_1` (`inv_pro_codigo`) REFERENCES `db.producto` (`pro_codigo`)
 );
 
