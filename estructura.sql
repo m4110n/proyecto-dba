@@ -1,56 +1,153 @@
-CREATE DATABASE bd_inventariofree;
-use bd_inventariofree;
 
--- estructura de tablas
+create database `bd_inventariofree`;
+use `bd_inventariofree`;
+--
 
--- Producto -------------------------------------------
-CREATE TABLE `db.producto`
-(
- `pro_codigo`      INT NOT NULL AUTO_INCREMENT,
- `pro_descripcion` varchar(45) NOT NULL,
+DELIMITER $$
+--
+-- Procedimientos
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `NUEVO_PRODUCTO` (`CODIGO` VARCHAR(10))  INSERT INTO inventario (inv_pro_codigo) VALUES (CODIGO)$$
 
-PRIMARY KEY (`pro_codigo`)
-);
+DELIMITER ;
 
+-- --------------------------------------------------------
 
--- Entrada -------------------------------------------
-CREATE TABLE `db.entrada`
-(
- `ent_id`         int NOT NULL ,
- `ent_factura`    varchar(30) NOT NULL ,
- `ent_pro_codigo` varchar(50) NOT NULL ,
- `ent_fecha_date` date NOT NULL ,
- `ent_cantidad`   int NOT NULL ,
+--
+-- Estructura de tabla para la tabla `entrada`
+--
 
-PRIMARY KEY (`ent_id`),
-KEY `FK_1` (`ent_pro_codigo`),
-CONSTRAINT `FK_3` FOREIGN KEY `FK_1` (`ent_pro_codigo`) REFERENCES `db.producto` (`pro_codigo`)
-);
+CREATE TABLE `entrada` (
+  `ent_id` int(4) NOT NULL,
+  `ent_factura` varchar(30) DEFAULT NULL,
+  `ent_pro_codigo` varchar(10) DEFAULT NULL,
+  `ent_fecha` date NOT NULL,
+  `ent_cantidad` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- salida -------------------------------------------
-CREATE TABLE `db.salida`
-(
- `sal_id`         int NOT NULL ,
- `sal_pro_codigo` varchar(50) NOT NULL ,
- `sal_factura`    varchar (30) NOT NULL ,
- `sal_fecha`      date NOT NULL ,
- `sal_cantidad`   int NOT NULL ,
+--
+-- Disparadores `entrada`
+--
+DELIMITER $$
+CREATE TRIGGER `INVENTARIO_AI` AFTER INSERT ON `entrada` FOR EACH ROW UPDATE inventario SET inv_stock = inv_stock+NEW.ent_cantidad, inv_entradas = inv_entradas+NEW.ent_cantidad where inv_pro_codigo = NEW.ent_pro_codigo
+$$
+DELIMITER ;
 
-PRIMARY KEY (`sal_id`, `sal_pro_codigo`),
-KEY `FK_1` (`sal_pro_codigo`),
-CONSTRAINT `FK_1` FOREIGN KEY `FK_1` (`sal_pro_codigo`) REFERENCES `db.producto` (`pro_codigo`)
-);
+-- --------------------------------------------------------
 
--- Inventario -------------------------------------------
-CREATE TABLE `db.inventario`
-(
- `inv_pro_codigo` varchar(50) NOT NULL ,
- `inv_entradas`   int NOT NULL ,
- `inv_salidas`    int NOT NULL ,
- `inv_stock`      int NOT NULL ,
+--
+-- Estructura de tabla para la tabla `inventario`
+--
 
-PRIMARY KEY (`inv_pro_codigo`),
-KEY `FK_1` (`inv_pro_codigo`),
-CONSTRAINT `FK_2` FOREIGN KEY `FK_1` (`inv_pro_codigo`) REFERENCES `db.producto` (`pro_codigo`)
-);
+CREATE TABLE `inventario` (
+  `inv_pro_codigo` varchar(10) NOT NULL,
+  `inv_entradas` int(4) DEFAULT 0,
+  `inv_salidas` int(4) DEFAULT 0,
+  `inv_stock` int(4) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `producto`
+--
+
+CREATE TABLE `producto` (
+  `pro_codigo` varchar(10) NOT NULL,
+  `pro_descripcion` varchar(150) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `salida`
+--
+
+CREATE TABLE `salida` (
+  `sal_id` int(4) NOT NULL,
+  `sal_factura` varchar(30) DEFAULT NULL,
+  `sal_pro_codigo` varchar(10) DEFAULT NULL,
+  `sal_fecha` date NOT NULL,
+  `sal_cantidad` int(4) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Disparadores `salida`
+--
+DELIMITER $$
+CREATE TRIGGER `INVENTARIO_S_AI` AFTER INSERT ON `salida` FOR EACH ROW UPDATE inventario SET inv_stock = inv_stock-NEW.sal_cantidad, inv_salidas = inv_salidas+NEW.sal_cantidad where inv_pro_codigo = NEW.sal_pro_codigo
+$$
+DELIMITER ;
+
+--
+-- Índices para tablas volcadas
+--
+
+--
+-- Indices de la tabla `entrada`
+--
+ALTER TABLE `entrada`
+  ADD PRIMARY KEY (`ent_id`),
+  ADD KEY `ent_pro_codigo` (`ent_pro_codigo`);
+
+--
+-- Indices de la tabla `inventario`
+--
+ALTER TABLE `inventario`
+  ADD PRIMARY KEY (`inv_pro_codigo`);
+
+--
+-- Indices de la tabla `producto`
+--
+ALTER TABLE `producto`
+  ADD PRIMARY KEY (`pro_codigo`);
+
+--
+-- Indices de la tabla `salida`
+--
+ALTER TABLE `salida`
+  ADD PRIMARY KEY (`sal_id`),
+  ADD KEY `sal_pro_codigo` (`sal_pro_codigo`);
+
+--
+-- AUTO_INCREMENT de las tablas volcadas
+--
+
+--
+-- AUTO_INCREMENT de la tabla `entrada`
+--
+ALTER TABLE `entrada`
+  MODIFY `ent_id` int(4) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `salida`
+--
+ALTER TABLE `salida`
+  MODIFY `sal_id` int(4) NOT NULL AUTO_INCREMENT;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `entrada`
+--
+ALTER TABLE `entrada`
+  ADD CONSTRAINT `entrada_ibfk_1` FOREIGN KEY (`ent_pro_codigo`) REFERENCES `producto` (`pro_codigo`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `inventario`
+--
+ALTER TABLE `inventario`
+  ADD CONSTRAINT `inventario_ibfk_1` FOREIGN KEY (`inv_pro_codigo`) REFERENCES `producto` (`pro_codigo`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `salida`
+--
+ALTER TABLE `salida`
+  ADD CONSTRAINT `salida_ibfk_1` FOREIGN KEY (`sal_pro_codigo`) REFERENCES `producto` (`pro_codigo`) ON DELETE CASCADE ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
